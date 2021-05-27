@@ -1,9 +1,9 @@
 import 'dart:math';
 
-import 'package:all_the_counters/app_state/current_counter_bloc.dart';
-import 'package:all_the_counters/app_state/current_counter_state.dart';
+import 'package:all_the_counters/screens/main_screen/current_counter_bloc.dart';
+import 'package:all_the_counters/screens/main_screen/current_counter_state.dart';
 import 'package:all_the_counters/app_state/db/counters_repository.dart';
-import 'package:all_the_counters/screens/counters_list_screen.dart';
+import 'package:all_the_counters/screens/counters_list/counters_list_screen.dart';
 import 'package:all_the_counters/widgets/basic_ui.dart';
 import 'package:all_the_counters/widgets/buttons.dart';
 import 'package:all_the_counters/widgets/counter_buttons_palette.dart';
@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../app.dart';
+import '../../app.dart';
 
 class MainPage extends StatefulWidget {
   @override

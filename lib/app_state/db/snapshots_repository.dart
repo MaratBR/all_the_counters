@@ -1,6 +1,7 @@
 import 'package:all_the_counters/app_state/db/records_repository.dart';
 import 'package:all_the_counters/app_state/exceptions.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:sembast/sembast.dart';
 
 import 'counters_repository.dart';
 
@@ -12,7 +13,8 @@ enum Period {
 }
 
 /// Based on the period type set for given counter and the last date counter
-/// was updated returns time of the beginning of last period.
+/// was updated returns time of the beginning of last period and the end of it
+/// as a list of 2 elements.
 /// i.e. is period set to month and lastUpdateAt is September 12, 2020 it'll
 /// return September 1, 2020. If period is set to year it will return January 1, 2020 and so on
 List<DateTime> _getPeriodBounds(Period period, DateTime lastUpdateAt) {
@@ -28,7 +30,7 @@ List<DateTime> _getPeriodBounds(Period period, DateTime lastUpdateAt) {
     case Period.year:
       return [
         DateTime(lastUpdateAt.year),
-        DateTime(lastUpdateAt.year + 1).subtract(Duration(days: 1))
+        DateTime(lastUpdateAt.year + 1).subtract(Duration(seconds: 1))
       ];
     case Period.week:
       // assume monday is the beginning of the week
@@ -47,24 +49,22 @@ class IllegalResetType extends AppException {
 
   IllegalResetType(this.resetType);
 
-
   @override
   String describe() => "$resetType is not a valid ResetType value for this operation";
 }
 
+const _PERIODS = {
+  ResetType.day: Period.day,
+  ResetType.month: Period.month,
+  ResetType.week: Period.week,
+  ResetType.year: Period.year
+};
+
 Period _periodFromResetType(ResetType resetType) {
-  switch (resetType) {
-    case ResetType.day:
-      return Period.day;
-    case ResetType.month:
-      return Period.month;
-    case ResetType.week:
-      return Period.week;
-    case ResetType.year:
-      return Period.year;
-    case ResetType.none:
-      throw new IllegalResetType(resetType);
-  }
+  var period = _PERIODS[resetType];
+  if (period == null)
+    throw new IllegalResetType(resetType);
+  return period;
 }
 
 class Snapshot extends Model {
@@ -72,30 +72,31 @@ class Snapshot extends Model {
   final double value;
   final Period period;
   final DateTime periodStart;
-  final DateTime periodEnd;
 
   Snapshot(
-      this.counterId, this.value, this.period, this.periodStart, this.periodEnd,
+      this.counterId, this.value, this.period, this.periodStart,
       {int? id}) : super(id: id);
 
   factory Snapshot.fromCounter(Counter counter) {
     if (!counter.inserted) {
       throw new ModelNotYetInserted(counterDAODef.collectionName, counter);
     }
-    final period = _periodFromResetType(counter.resetState.type);
+    final period = _periodFromResetType(counter.resetType);
     final periodBounds = _getPeriodBounds(period, counter.lastUpdateAt);
     return Snapshot(
         counter.id!,
         counter.value,
         period,
-        periodBounds[0],
-        periodBounds[1],
+        periodBounds[0]
     );
   }
 
   static bool requiresSnapshot(Counter counter, DateTime now) {
+    if (counter.resetType == ResetType.none)
+      return false;
+
     try {
-      final period = _periodFromResetType(counter.resetState.type);
+      final period = _periodFromResetType(counter.resetType);
       final periodBounds = _getPeriodBounds(period, counter.lastUpdateAt);
       final periodBounds2 = _getPeriodBounds(period, now);
       return periodBounds[0] != periodBounds2[1];
@@ -123,7 +124,6 @@ class _SnapshotDef extends DAODefinition<Snapshot> {
       data['value'], 
       Period.values[data['period']], 
       DateTime.fromMillisecondsSinceEpoch(data['periodStart']), 
-      DateTime.fromMillisecondsSinceEpoch(data['periodEnd']),
       id: data['id']
     );
   }
@@ -134,7 +134,6 @@ class _SnapshotDef extends DAODefinition<Snapshot> {
     'value': value.value,
     'period': value.period.index,
     'periodStart': value.periodStart.millisecondsSinceEpoch,
-    'periodEnd': value.periodEnd.millisecondsSinceEpoch,
   };
 }
 
@@ -143,7 +142,16 @@ final _snapshotsDef = _SnapshotDef();
 class SnapshotsRepository extends RecordsRepository<Snapshot> {
   SnapshotsRepository(BuildContext context) : super(_snapshotsDef, context);
 
-  Future createSnapshot(Counter counter) {
+  Future<Snapshot> createSnapshot(Counter counter) {
     return insert(Snapshot.fromCounter(counter));
+  }
+
+  Future<bool> clearSnapshotsOf(int counterId) {
+    return deleteBy(Filter.equals('counterId', counterId))
+        .then((value) => value > 0);
+  }
+
+  Future<List<Snapshot>> getSnapshotsOf(int counterId) {
+    return find(Finder(filter: Filter.equals('counterId', counterId)));
   }
 }

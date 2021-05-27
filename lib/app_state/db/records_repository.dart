@@ -12,6 +12,12 @@ abstract class Model extends Equatable {
 
   get inserted => id != null;
 
+  int requireId() {
+    if (id == null)
+      throw new ModelNotYetInserted(null, this);
+    return id!;
+  }
+
   Model({this.id});
 }
 
@@ -22,13 +28,13 @@ abstract class DAODefinition<T extends Model> {
 }
 
 class ModelNotYetInserted extends AppException {
-  String collectionName;
+  String? collectionName;
   Model model;
 
   ModelNotYetInserted(this.collectionName, this.model);
 
   @override
-  String describe() => "model $model is not yet inserted in the collection '$collectionName'";
+  String describe() => collectionName == null ? "model $model is not yet inserted in the collection" : "model $model is not yet inserted in the collection '$collectionName'";
 }
 
 class RecordsRepository<T extends Model> {

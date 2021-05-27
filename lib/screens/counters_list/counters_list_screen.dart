@@ -1,5 +1,6 @@
-import 'package:all_the_counters/app_state/counters_bloc.dart';
-import 'package:all_the_counters/app_state/counters_state.dart';
+import 'package:all_the_counters/screens/counter_info/counter_info_screen.dart';
+import 'package:all_the_counters/screens/counters_list/counters_bloc.dart';
+import 'package:all_the_counters/screens/counters_list/counters_state.dart';
 import 'package:all_the_counters/app_state/db/counters_repository.dart';
 import 'package:all_the_counters/screens/edit_counter/edit_counter_screen.dart';
 import 'package:all_the_counters/widgets/basic_ui.dart';
@@ -10,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../app.dart';
+import '../../app.dart';
 
 class CounterListScreen extends StatefulWidget {
   @override
@@ -97,7 +98,7 @@ class _CounterListScreenState extends State<CounterListScreen> with RouteAware {
         onLongPress: () {
           final id = counter.id;
           if (id != null)
-            _openEditCounter(id);
+            _openCounterInf(id);
         },
         child: Padding(
           padding: EdgeInsets.fromLTRB(10, 20, 10, 20),
@@ -175,6 +176,16 @@ class _CounterListScreenState extends State<CounterListScreen> with RouteAware {
           context,
           MaterialPageRoute(
               builder: (context) => EditCounterScreen(counterId: id)
+          )
+      );
+  }
+
+  void _openCounterInf(int id) {
+    if (id != null)
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => CounterInfoScreen(counterId: id)
           )
       );
   }

@@ -1,4 +1,4 @@
-import 'db/counters_repository.dart';
+import '../../app_state/db/counters_repository.dart';
 
 class CountersState {
   final List<Counter> counters;

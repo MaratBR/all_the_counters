@@ -1,5 +1,5 @@
-import 'package:all_the_counters/app_state/counters_event.dart';
-import 'package:all_the_counters/app_state/counters_state.dart';
+import 'package:all_the_counters/screens/counters_list/counters_event.dart';
+import 'package:all_the_counters/screens/counters_list/counters_state.dart';
 import 'package:all_the_counters/app_state/db/counters_repository.dart';
 import 'package:all_the_counters/app_state/event_bus.dart';
 import 'package:bloc/bloc.dart';

@@ -1,7 +1,9 @@
 import 'dart:developer';
 
+import 'package:all_the_counters/app_state/db/snapshots_repository.dart';
 import 'package:all_the_counters/app_state/event_bus.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast/timestamp.dart';
 
@@ -21,24 +23,16 @@ enum ResetType {
   week,
 }
 
-class ResetState {
-  final ResetType type;
-  final int offset;
-
-  ResetState(this.type, this.offset);
-
-  factory ResetState.none() => ResetState(ResetType.none, 0);
-}
-
 class Counter extends Model {
   final String? label;
   final Timestamp? createdAt;
   final CounterType type;
   final double value;
   final bool isSelected;
-  final ResetState resetState;
+  final ResetType resetType;
   final DateTime lastUsedAt;
   final DateTime lastUpdateAt;
+  final bool resetOnSnapshot;
 
   Counter({
     Timestamp? createdAt,
@@ -47,11 +41,12 @@ class Counter extends Model {
     this.value = 0.0,
     this.type = CounterType.number,
     this.isSelected = false,
+    this.resetOnSnapshot = true,
     DateTime? lastUsedAt,
     DateTime? lastUpdateAt,
-    ResetState? resetState
+    ResetType? resetType
   }) : this.createdAt = createdAt ?? Timestamp.now(),
-        this.resetState = resetState ?? ResetState.none(),
+        this.resetType = resetType ?? ResetType.none,
         this.lastUpdateAt = lastUpdateAt ?? DateTime.now(),
         this.lastUsedAt = lastUsedAt ?? DateTime.now(),
         super(id: id);
@@ -59,23 +54,26 @@ class Counter extends Model {
   Counter copyWith({
     Timestamp? createdAt, String? label, DateTime? lastUsedAt,
     CounterType? type, double? value, bool? isSelected, int? id,
-    ResetState? resetState, DateTime? lastUpdateAt
+    ResetType? resetType, DateTime? lastUpdateAt, bool? resetOnSnapshot
   }) {
     return Counter(
-      id: id ?? this.id,
-      createdAt: createdAt ?? this.createdAt,
-      label: label ?? this.label,
-      type: type ?? this.type,
-      value: value ?? this.value,
-      isSelected: isSelected ?? this.isSelected,
-      lastUsedAt: lastUsedAt ?? this.lastUsedAt,
-      resetState: resetState ?? this.resetState,
-      lastUpdateAt: lastUpdateAt ?? this.lastUpdateAt
+        id: id ?? this.id,
+        createdAt: createdAt ?? this.createdAt,
+        label: label ?? this.label,
+        type: type ?? this.type,
+        value: value ?? this.value,
+        isSelected: isSelected ?? this.isSelected,
+        lastUsedAt: lastUsedAt ?? this.lastUsedAt,
+        resetType: resetType ?? this.resetType,
+        lastUpdateAt: lastUpdateAt ?? this.lastUpdateAt,
+        resetOnSnapshot: resetOnSnapshot ?? this.resetOnSnapshot
     );
   }
 
   @override
-  List<Object?> get props => [id, label, createdAt, type, value, isSelected, lastUsedAt, resetState];
+  List<Object?> get props => [
+    id, label, createdAt, type, value, isSelected,
+    lastUsedAt, resetType, resetOnSnapshot];
 }
 
 class _CounterDef extends DAODefinition<Counter> {
@@ -93,10 +91,8 @@ class _CounterDef extends DAODefinition<Counter> {
       type: CounterType.values[data['type'] ?? 0],
       lastUpdateAt: DateTime.fromMillisecondsSinceEpoch(data['lastUpdateAt'] ?? 0),
       lastUsedAt: DateTime.fromMillisecondsSinceEpoch(data['lastUsedAt'] ?? 0),
-      resetState: data['reset'] == null ? ResetState.none() : new ResetState(
-        ResetType.values[data['reset']['type'] ?? 0],
-        data['reset']['offset'] ?? 0
-      )
+      resetType: ResetType.values[data['resetType'] ?? 0],
+      resetOnSnapshot: data['resetOnSnapshot'] ?? true
     );
   }
 
@@ -110,10 +106,8 @@ class _CounterDef extends DAODefinition<Counter> {
       'type': value.type.index,
       'lastUsedAt': value.lastUsedAt.millisecondsSinceEpoch,
       'lastUpdateAt': value.lastUpdateAt.millisecondsSinceEpoch,
-      'reset': {
-        'offset': value.resetState.offset,
-        'type': value.resetState.type.index
-      }
+      'resetType': value.resetType.index,
+      'resetOnSnapshot': value.resetOnSnapshot
     };
   }
 }
@@ -183,5 +177,17 @@ class CountersRepository extends RecordsRepository<Counter> {
       return counter;
     }
     return counter;
+  }
+
+  Future tryToCreateSnapshot(Counter counter) async {
+    if (counter.resetType == ResetType.none)
+      return;
+
+    if (Snapshot.requiresSnapshot(counter, DateTime.now())) {
+      await RepositoryProvider.of<SnapshotsRepository>(context).createSnapshot(counter);
+      if (counter.resetOnSnapshot) {
+        await setCounterValue(counter, 0);
+      }
+    }
   }
 }

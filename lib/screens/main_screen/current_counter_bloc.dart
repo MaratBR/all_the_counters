@@ -1,5 +1,5 @@
-import 'package:all_the_counters/app_state/current_counter_event.dart';
-import 'package:all_the_counters/app_state/current_counter_state.dart';
+import 'package:all_the_counters/screens/main_screen/current_counter_event.dart';
+import 'package:all_the_counters/screens/main_screen/current_counter_state.dart';
 import 'package:all_the_counters/app_state/db/counters_repository.dart';
 import 'package:all_the_counters/app_state/db/snapshots_repository.dart';
 import 'package:bloc/bloc.dart';
@@ -55,6 +55,14 @@ class CurrentCounterBloc extends Bloc<CurrentCounterEvent, CurrentCounterState> 
     try {
       final repo = RepositoryProvider.of<CountersRepository>(context);
       final counter = await repo.getSelectedOrSet();
+
+      if (counter != null && counter.resetType != ResetType.none) {
+        if (Snapshot.requiresSnapshot(counter, DateTime.now())) {
+          final snapRepo = RepositoryProvider.of<SnapshotsRepository>(context);
+          snapRepo.createSnapshot(counter);
+        }
+      }
+
       add(CurrentCounterNewCounter(counter));
     } catch (e) {
       add(CurrentCounterMessage(e.toString()));

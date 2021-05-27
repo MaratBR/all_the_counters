@@ -4,12 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:all_the_counters/app_state/db/counters_repository.dart';
 import 'package:all_the_counters/app_state/db/metadata_repository.dart';
-import 'package:all_the_counters/screens/main_screen.dart';
+import 'package:all_the_counters/screens/main_screen/main_screen.dart';
 
 final RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +56,8 @@ class MyApp extends StatelessWidget {
                 fontFamily: 'OpenSans'
             ),
             headline2: TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.w100,
+              fontSize: 40,
+              fontWeight: FontWeight.w100,
             ),
             subtitle2: TextStyle(
                 fontWeight: FontWeight.bold,

@@ -6,7 +6,6 @@ import 'package:all_the_counters/screens/edit_counter/edit_couner_state.dart';
 import 'package:all_the_counters/screens/edit_counter/edit_counter_bloc.dart';
 import 'package:all_the_counters/screens/edit_counter/edit_counter_form.dart';
 import 'package:all_the_counters/widgets/basic_ui.dart';
-import 'package:all_the_counters/widgets/counter_value_display.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,7 +23,6 @@ class EditCounterScreen extends StatefulWidget {
 
 class _EditCounterScreenState extends State<EditCounterScreen> {
   late EditCounterBloc _editCounterBloc;
-  final _formKey = GlobalKey<FormState>();
   Timer? _debounce;
 
   @override
