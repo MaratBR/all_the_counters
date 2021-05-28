@@ -24,7 +24,7 @@ class CurrentCounterBloc extends Bloc<CurrentCounterEvent, CurrentCounterState> 
     } else if (event is CurrentCounterNewCounter) {
       final counter = event.counter;
       if (counter != null)
-        yield CurrentCounterState.fromCounter(counter);
+        yield CurrentCounterState.fromCounter(counter, event.snapshotsCount);
       else
         yield CurrentCounterState.noCounter();
     } else if (event is CurrentCounterLoading) {
@@ -54,25 +54,16 @@ class CurrentCounterBloc extends Bloc<CurrentCounterEvent, CurrentCounterState> 
   Future getCurrentCounter() async {
     try {
       final repo = RepositoryProvider.of<CountersRepository>(context);
-      final counter = await repo.getSelectedOrSet();
-      add(CurrentCounterNewCounter(counter));
+      final snapRepo = RepositoryProvider.of<SnapshotsRepository>(context);
+      var counter = await repo.getSelectedOrSet();
+      if (counter != null && Snapshot.requiresSnapshot(counter, DateTime.now())) {
+        counter = await repo.createSnapshot(counter);
+      }
+      final snapshotsCount = counter == null ? 0 :
+        await snapRepo.countSnapshotsOf(counter.requireId());
+      add(CurrentCounterNewCounter(counter, snapshotsCount: snapshotsCount));
     } catch (e) {
       add(CurrentCounterMessage(e.toString()));
-    }
-  }
-
-  Future checkCurrentCounterReset() async {
-    final counter = state.counter;
-    final repo = RepositoryProvider.of<CountersRepository>(context);
-    if (counter != null && counter.resetType != ResetType.none) {
-      final needSnapshot = Snapshot.requiresSnapshot(counter, DateTime.now());
-      if (needSnapshot) {
-        final c = await repo.createSnapshot(counter);
-        if (c != null) {
-          add(CurrentCounterNewCounter(c));
-          return;
-        }
-      }
     }
   }
 

@@ -14,6 +14,7 @@ class CurrentCounterState {
   final String? label;
   final String? message;
   final CurrentCounterStateType stateType;
+  final int snapshotsCount;
 
   CurrentCounterState({
     this.value = 0,
@@ -21,6 +22,7 @@ class CurrentCounterState {
     this.label,
     this.counter,
     this.message,
+    this.snapshotsCount = 0,
     this.stateType = CurrentCounterStateType.noCounter
   });
 
@@ -28,13 +30,14 @@ class CurrentCounterState {
     return CurrentCounterState(message: message);
   }
 
-  factory CurrentCounterState.fromCounter(Counter counter) {
+  factory CurrentCounterState.fromCounter(Counter counter, int? snapshotsCount) {
     return CurrentCounterState(
       type: counter.type,
       value: counter.value,
       label: counter.label,
       stateType: CurrentCounterStateType.counter,
-      counter: counter
+      counter: counter,
+      snapshotsCount: snapshotsCount ?? 0
     );
   }
 

@@ -52,6 +52,10 @@ class RecordsRepository<T extends Model> {
     return await storeRef.count(await AppDatabase.instance.database);
   }
 
+  Future<int> countOf(Filter filter) async {
+    return await storeRef.count(await AppDatabase.instance.database, filter: filter);
+  }
+
   Future<T> insert(T value, {bool forceInsert = false}) async {
     if (value.inserted && !forceInsert) {
       this.update(value);

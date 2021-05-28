@@ -151,6 +151,10 @@ class SnapshotsRepository extends RecordsRepository<Snapshot> {
         .then((value) => value > 0);
   }
 
+  Future<int> countSnapshotsOf(int counterId) {
+    return countOf(Filter.equals('counterId', counterId));
+  }
+
   Future<List<Snapshot>> getSnapshotsOf(int counterId) {
     return find(Finder(filter: Filter.equals('counterId', counterId), sortOrders: [SortOrder('periodStart', false)]));
   }

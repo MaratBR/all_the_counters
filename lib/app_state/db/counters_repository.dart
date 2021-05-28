@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:all_the_counters/app_state/db/snapshots_repository.dart';
 import 'package:all_the_counters/app_state/event_bus.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sembast/sembast.dart';
@@ -23,6 +24,17 @@ enum ResetType {
   week,
 }
 
+class CounterMeta extends Equatable {
+  final int? snapshotsCount;
+
+  CounterMeta(this.snapshotsCount);
+
+  factory CounterMeta.empty() => CounterMeta(null);
+
+  @override
+  List<Object?> get props => [snapshotsCount];
+}
+
 class Counter extends Model {
   final String? label;
   final Timestamp? createdAt;
@@ -33,6 +45,7 @@ class Counter extends Model {
   final DateTime lastUsedAt;
   final DateTime lastUpdateAt;
   final bool resetOnSnapshot;
+  final CounterMeta meta;
 
   Counter({
     Timestamp? createdAt,
@@ -42,6 +55,7 @@ class Counter extends Model {
     this.type = CounterType.number,
     this.isSelected = false,
     this.resetOnSnapshot = true,
+    CounterMeta? meta,
     DateTime? lastUsedAt,
     DateTime? lastUpdateAt,
     ResetType? resetType
@@ -49,12 +63,14 @@ class Counter extends Model {
         this.resetType = resetType ?? ResetType.none,
         this.lastUpdateAt = lastUpdateAt ?? DateTime.now(),
         this.lastUsedAt = lastUsedAt ?? DateTime.now(),
+        this.meta = meta ?? CounterMeta.empty(),
         super(id: id);
 
   Counter copyWith({
     Timestamp? createdAt, String? label, DateTime? lastUsedAt,
     CounterType? type, double? value, bool? isSelected, int? id,
-    ResetType? resetType, DateTime? lastUpdateAt, bool? resetOnSnapshot
+    ResetType? resetType, DateTime? lastUpdateAt, bool? resetOnSnapshot,
+    CounterMeta? meta
   }) {
     return Counter(
         id: id ?? this.id,
@@ -66,6 +82,7 @@ class Counter extends Model {
         lastUsedAt: lastUsedAt ?? this.lastUsedAt,
         resetType: resetType ?? this.resetType,
         lastUpdateAt: lastUpdateAt ?? this.lastUpdateAt,
+        meta: meta ?? this.meta,
         resetOnSnapshot: resetOnSnapshot ?? this.resetOnSnapshot
     );
   }
@@ -73,7 +90,7 @@ class Counter extends Model {
   @override
   List<Object?> get props => [
     id, label, createdAt, type, value, isSelected,
-    lastUsedAt, resetType, resetOnSnapshot];
+    lastUsedAt, resetType, resetOnSnapshot, meta];
 }
 
 class _CounterDef extends DAODefinition<Counter> {

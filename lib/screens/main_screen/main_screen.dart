@@ -32,13 +32,11 @@ class _MainPageState extends State<MainPage> with RouteAware {
   @override
   void didPush() async {
     await _bloc.getCurrentCounter();
-    await _bloc.checkCurrentCounterReset();
   }
 
   @override
   void didPopNext() async {
     await _bloc.getCurrentCounter();
-    await _bloc.checkCurrentCounterReset();
     // Covering route was popped off the navigator.
   }
 
@@ -112,6 +110,8 @@ class _MainPageState extends State<MainPage> with RouteAware {
   }
 
   List<Widget> _buildMainArea(CurrentCounterState state) {
+    final theme = Theme.of(context);
+
     if (state.stateType == CurrentCounterStateType.noCounter) {
       return [
         Container(
@@ -165,7 +165,13 @@ class _MainPageState extends State<MainPage> with RouteAware {
               ),
             ],
             mainAxisAlignment: MainAxisAlignment.spaceEvenly
-        )
+        ),
+        if (state.snapshotsCount > 0)
+          Container(
+            margin: EdgeInsets.only(top: 15),
+            child: Text(state.snapshotsCount.toString() + " " + (state.snapshotsCount == 1 ? "snapshot" : "snapshots")),
+          ),
+
       ];
     } else if (state.stateType == CurrentCounterStateType.loading) {
       return [

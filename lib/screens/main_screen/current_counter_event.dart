@@ -15,9 +15,10 @@ class CurrentCounterNewValue extends CurrentCounterEvent {
 }
 
 class CurrentCounterNewCounter extends CurrentCounterEvent {
-  const CurrentCounterNewCounter(this.counter);
+  const CurrentCounterNewCounter(this.counter, {this.snapshotsCount = 0});
 
   final Counter? counter;
+  final int snapshotsCount;
 
   @override
   List<Object?> get props => [counter];
