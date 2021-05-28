@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:all_the_counters/app_state/db/counters_repository.dart';
+import 'package:all_the_counters/app_state/db/snapshots_repository.dart';
 import 'package:all_the_counters/widgets/counter_value_display.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -91,9 +92,35 @@ class _EditCounterFormState extends State<EditCounterForm> {
                 Text(v.toString().substring(v.toString().indexOf('.') + 1).toUpperCase())
               ],
             ),
+
+          Padding(
+              padding: EdgeInsets.all(12),
+              child: Text("Reset every", style: Theme.of(context).textTheme.subtitle2)
+          ),
+          
+          DropdownButtonFormField<ResetType>(
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(25))),
+            ),
+            value: _currentValue.resetType,
+            onChanged: (v) => _onChange(_currentValue.copyWith(resetType: v)),
+            items: ResetType.values.map((e) => DropdownMenuItem<ResetType>(
+              value: e,
+              child: Text(_resetTypeToString(e)),
+            )).toList(),
+          )
         ],
       ),
     );
+  }
+
+  static String _resetTypeToString(ResetType resetType) {
+    switch (resetType) {
+      case ResetType.none:
+        return "never";
+      default:
+        return resetType.toString().substring(resetType.runtimeType.toString().length + 1);
+    }
   }
 
   void _onChange(Counter newValue) {

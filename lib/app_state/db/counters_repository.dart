@@ -179,15 +179,27 @@ class CountersRepository extends RecordsRepository<Counter> {
     return counter;
   }
 
-  Future tryToCreateSnapshot(Counter counter) async {
+  Future<Counter?> createSnapshot(Counter counter) async {
     if (counter.resetType == ResetType.none)
-      return;
+      return null;
 
-    if (Snapshot.requiresSnapshot(counter, DateTime.now())) {
-      await RepositoryProvider.of<SnapshotsRepository>(context).createSnapshot(counter);
-      if (counter.resetOnSnapshot) {
-        await setCounterValue(counter, 0);
-      }
+    await RepositoryProvider.of<SnapshotsRepository>(context).createSnapshot(counter);
+    if (counter.resetOnSnapshot) {
+      return await setCounterValue(counter, 0);
+    } else {
+      counter = counter.copyWith(lastUpdateAt: DateTime.now());
+      await update(counter);
     }
+    return counter;
+  }
+
+  @override
+  Future<bool> delete(Counter instance) {
+    try {
+      RepositoryProvider.of<SnapshotsRepository>(context).deleteSnapshotsOf(instance.requireId());
+    } catch (e) {
+      log("Failed to delete snapshots of counter id=${instance.id}, \"${instance.label}\"", error: e);
+    }
+    return super.delete(instance);
   }
 }

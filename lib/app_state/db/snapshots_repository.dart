@@ -99,7 +99,7 @@ class Snapshot extends Model {
       final period = _periodFromResetType(counter.resetType);
       final periodBounds = _getPeriodBounds(period, counter.lastUpdateAt);
       final periodBounds2 = _getPeriodBounds(period, now);
-      return periodBounds[0] != periodBounds2[1];
+      return periodBounds[0] != periodBounds2[0];
     } catch (e) {
       // IllegalResetType is thrown
       if (e is IllegalResetType) {
@@ -152,6 +152,10 @@ class SnapshotsRepository extends RecordsRepository<Snapshot> {
   }
 
   Future<List<Snapshot>> getSnapshotsOf(int counterId) {
-    return find(Finder(filter: Filter.equals('counterId', counterId)));
+    return find(Finder(filter: Filter.equals('counterId', counterId), sortOrders: [SortOrder('periodStart', false)]));
+  }
+
+  Future<int> deleteSnapshotsOf(int counterId) {
+    return deleteBy(Filter.equals('counterId', counterId));
   }
 }

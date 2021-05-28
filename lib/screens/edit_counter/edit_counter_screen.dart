@@ -83,7 +83,7 @@ class _EditCounterScreenState extends State<EditCounterScreen> {
       ];
 
     return Padding(
-      padding: EdgeInsets.all(10),
+      padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
       child: Column(children: widgets),
     );
   }

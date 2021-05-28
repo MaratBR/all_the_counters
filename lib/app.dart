@@ -30,9 +30,9 @@ class MyApp extends StatelessWidget {
 
   List<RepositoryProvider> _repositoryProviders() {
     return [
+      RepositoryProvider<SnapshotsRepository>(create: (context) => SnapshotsRepository(context)),
       RepositoryProvider<CountersRepository>(create: (context) => CountersRepository(context)),
       RepositoryProvider<MetadataRepository>(create: (context) => MetadataRepository(context)),
-      RepositoryProvider<SnapshotsRepository>(create: (context) => SnapshotsRepository(context)),
     ];
   }
 

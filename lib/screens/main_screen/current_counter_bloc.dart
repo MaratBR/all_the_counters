@@ -9,9 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class CurrentCounterBloc extends Bloc<CurrentCounterEvent, CurrentCounterState> {
   final BuildContext context;
 
-  CurrentCounterBloc(this.context) : super(CurrentCounterState.initial()) {
-    getCurrentCounter();
-  }
+  CurrentCounterBloc(this.context) : super(CurrentCounterState.initial()) {}
 
   @override
   Stream<CurrentCounterState> mapEventToState(CurrentCounterEvent event) async* {
@@ -36,18 +34,20 @@ class CurrentCounterBloc extends Bloc<CurrentCounterEvent, CurrentCounterState> 
     }
   }
 
-  addToCounter(double value) {
-    add(CurrentCounterNewValue(state.value + value));
+  void addToCounter(double value) async {
     final counter = state.counter;
     if (counter != null) {
+      add(CurrentCounterNewValue(state.value + value));
       final repo = RepositoryProvider.of<CountersRepository>(context);
 
-      if (Snapshot.requiresSnapshot(counter, DateTime.now())) {
-        final repo = RepositoryProvider.of<SnapshotsRepository>(context);
-        repo.createSnapshot(counter);
-      }
-
       repo.setCounterValue(counter, state.value + value);
+
+      final needsSnapshot = Snapshot.requiresSnapshot(counter, DateTime.now());
+      if (needsSnapshot) {
+        final newCounter = await repo.createSnapshot(counter);
+        if (newCounter != null)
+          add(CurrentCounterNewValue(newCounter.value));
+      }
     }
   }
 
@@ -55,17 +55,24 @@ class CurrentCounterBloc extends Bloc<CurrentCounterEvent, CurrentCounterState> 
     try {
       final repo = RepositoryProvider.of<CountersRepository>(context);
       final counter = await repo.getSelectedOrSet();
-
-      if (counter != null && counter.resetType != ResetType.none) {
-        if (Snapshot.requiresSnapshot(counter, DateTime.now())) {
-          final snapRepo = RepositoryProvider.of<SnapshotsRepository>(context);
-          snapRepo.createSnapshot(counter);
-        }
-      }
-
       add(CurrentCounterNewCounter(counter));
     } catch (e) {
       add(CurrentCounterMessage(e.toString()));
+    }
+  }
+
+  Future checkCurrentCounterReset() async {
+    final counter = state.counter;
+    final repo = RepositoryProvider.of<CountersRepository>(context);
+    if (counter != null && counter.resetType != ResetType.none) {
+      final needSnapshot = Snapshot.requiresSnapshot(counter, DateTime.now());
+      if (needSnapshot) {
+        final c = await repo.createSnapshot(counter);
+        if (c != null) {
+          add(CurrentCounterNewCounter(c));
+          return;
+        }
+      }
     }
   }
 

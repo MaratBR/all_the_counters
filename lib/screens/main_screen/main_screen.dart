@@ -30,13 +30,15 @@ class _MainPageState extends State<MainPage> with RouteAware {
   }
 
   @override
-  void didPush() {
-    _bloc.getCurrentCounter();
+  void didPush() async {
+    await _bloc.getCurrentCounter();
+    await _bloc.checkCurrentCounterReset();
   }
 
   @override
-  void didPopNext() {
-    _bloc.getCurrentCounter();
+  void didPopNext() async {
+    await _bloc.getCurrentCounter();
+    await _bloc.checkCurrentCounterReset();
     // Covering route was popped off the navigator.
   }
 
