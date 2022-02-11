@@ -1,4 +1,5 @@
 import 'package:all_the_counters/app_state/db/counters_repository.dart';
+import 'package:all_the_counters/ui/outline_button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -11,10 +12,8 @@ class CounterButtonPalette extends StatefulWidget {
   final CounterType type;
   final OnCounterButtonPaletteClicked onClick;
 
-  CounterButtonPalette({
-    required this.gradation,
-    required this.type,
-    required this.onClick});
+  CounterButtonPalette(
+      {required this.gradation, required this.type, required this.onClick});
 
   @override
   State<StatefulWidget> createState() {
@@ -44,32 +43,31 @@ class _CounterButtonPaletteState extends State<CounterButtonPalette> {
                         })
                       },
                       icon: Icon(_isNegative ? Icons.remove : Icons.add),
-                    )
-                ),
-
+                    )),
                 for (int i = 0; i < widget.gradation.length; i++)
                   Padding(
                     padding: EdgeInsets.only(left: 6),
-                    child: MaterialButton(
-                      elevation: 0,
-                      color: theme.cardColor,
+                    child: FocusedOutlineButton(
                       onPressed: () => {
-                        widget.onClick(_isNegative ? -widget.gradation[i] : widget.gradation[i])
+                        widget.onClick(_isNegative
+                            ? -widget.gradation[i]
+                            : widget.gradation[i])
                       },
                       child: Padding(
-                        padding: EdgeInsets.only(top: 10, bottom: 10, left: 5, right: 5),
+                        padding: EdgeInsets.only(
+                            top: 10, bottom: 10, left: 5, right: 5),
                         child: CounterValueDisplay(
-                          value: _isNegative ? -widget.gradation[i] : widget.gradation[i],
+                          value: _isNegative
+                              ? -widget.gradation[i]
+                              : widget.gradation[i],
                           type: widget.type,
                         ),
                       ),
                     ),
                   )
               ],
-            )
-        )
+            ))
       ],
     );
   }
-
 }

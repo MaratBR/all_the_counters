@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:all_the_counters/app_state/db/snapshots_repository.dart';
-import 'package:all_the_counters/app_state/event_bus.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,11 +9,7 @@ import 'package:sembast/timestamp.dart';
 
 import 'records_repository.dart';
 
-enum CounterType {
-  unset,
-  number,
-  time
-}
+enum CounterType { unset, number, time }
 
 enum ResetType {
   none,
@@ -35,6 +30,11 @@ class CounterMeta extends Equatable {
   List<Object?> get props => [snapshotsCount];
 }
 
+class CounterUIPreferences {
+  final String? color = null;
+  final String? interfaceKind = null;
+}
+
 class Counter extends Model {
   final String? label;
   final Timestamp? createdAt;
@@ -46,32 +46,41 @@ class Counter extends Model {
   final DateTime lastUpdateAt;
   final bool resetOnSnapshot;
   final CounterMeta meta;
+  final CounterUIPreferences ui;
 
-  Counter({
-    Timestamp? createdAt,
-    int? id,
-    this.label,
-    this.value = 0.0,
-    this.type = CounterType.number,
-    this.isSelected = false,
-    this.resetOnSnapshot = true,
-    CounterMeta? meta,
-    DateTime? lastUsedAt,
-    DateTime? lastUpdateAt,
-    ResetType? resetType
-  }) : this.createdAt = createdAt ?? Timestamp.now(),
+  Counter(
+      {Timestamp? createdAt,
+      int? id,
+      this.label,
+      this.value = 0.0,
+      this.type = CounterType.number,
+      this.isSelected = false,
+      this.resetOnSnapshot = true,
+      CounterMeta? meta,
+      DateTime? lastUsedAt,
+      DateTime? lastUpdateAt,
+      ResetType? resetType,
+      CounterUIPreferences? ui})
+      : this.createdAt = createdAt ?? Timestamp.now(),
         this.resetType = resetType ?? ResetType.none,
         this.lastUpdateAt = lastUpdateAt ?? DateTime.now(),
         this.lastUsedAt = lastUsedAt ?? DateTime.now(),
         this.meta = meta ?? CounterMeta.empty(),
+        this.ui = ui ?? CounterUIPreferences(),
         super(id: id);
 
-  Counter copyWith({
-    Timestamp? createdAt, String? label, DateTime? lastUsedAt,
-    CounterType? type, double? value, bool? isSelected, int? id,
-    ResetType? resetType, DateTime? lastUpdateAt, bool? resetOnSnapshot,
-    CounterMeta? meta
-  }) {
+  Counter copyWith(
+      {Timestamp? createdAt,
+      String? label,
+      DateTime? lastUsedAt,
+      CounterType? type,
+      double? value,
+      bool? isSelected,
+      int? id,
+      ResetType? resetType,
+      DateTime? lastUpdateAt,
+      bool? resetOnSnapshot,
+      CounterMeta? meta}) {
     return Counter(
         id: id ?? this.id,
         createdAt: createdAt ?? this.createdAt,
@@ -83,14 +92,22 @@ class Counter extends Model {
         resetType: resetType ?? this.resetType,
         lastUpdateAt: lastUpdateAt ?? this.lastUpdateAt,
         meta: meta ?? this.meta,
-        resetOnSnapshot: resetOnSnapshot ?? this.resetOnSnapshot
-    );
+        resetOnSnapshot: resetOnSnapshot ?? this.resetOnSnapshot);
   }
 
   @override
   List<Object?> get props => [
-    id, label, createdAt, type, value, isSelected,
-    lastUsedAt, resetType, resetOnSnapshot, meta];
+        id,
+        label,
+        createdAt,
+        type,
+        value,
+        isSelected,
+        lastUsedAt,
+        resetType,
+        resetOnSnapshot,
+        meta
+      ];
 }
 
 class _CounterDef extends DAODefinition<Counter> {
@@ -100,17 +117,18 @@ class _CounterDef extends DAODefinition<Counter> {
   @override
   Counter fromMap(int id, Map<String, dynamic> data) {
     return Counter(
-      label: data['label'],
-      createdAt: data['createdAt'],
-      id: id,
-      value: data['value'],
-      isSelected: data['isSelected'] ?? false,
-      type: CounterType.values[data['type'] ?? 0],
-      lastUpdateAt: DateTime.fromMillisecondsSinceEpoch(data['lastUpdateAt'] ?? 0),
-      lastUsedAt: DateTime.fromMillisecondsSinceEpoch(data['lastUsedAt'] ?? 0),
-      resetType: ResetType.values[data['resetType'] ?? 0],
-      resetOnSnapshot: data['resetOnSnapshot'] ?? true
-    );
+        label: data['label'],
+        createdAt: data['createdAt'],
+        id: id,
+        value: data['value'],
+        isSelected: data['isSelected'] ?? false,
+        type: CounterType.values[data['type'] ?? 0],
+        lastUpdateAt:
+            DateTime.fromMillisecondsSinceEpoch(data['lastUpdateAt'] ?? 0),
+        lastUsedAt:
+            DateTime.fromMillisecondsSinceEpoch(data['lastUsedAt'] ?? 0),
+        resetType: ResetType.values[data['resetType'] ?? 0],
+        resetOnSnapshot: data['resetOnSnapshot'] ?? true);
   }
 
   @override
@@ -134,7 +152,8 @@ final DAODefinition<Counter> counterDAODef = _CounterDef();
 class CountersRepository extends RecordsRepository<Counter> {
   CountersRepository(BuildContext context) : super(counterDAODef, context);
 
-  Future<List<Counter>> getAll() => getAllSortedBy('lastUsedAt', ascending: false);
+  Future<List<Counter>> getAll() =>
+      getAllSortedBy('lastUsedAt', ascending: false);
 
   Future reset() async {
     await deleteAll();
@@ -157,9 +176,9 @@ class CountersRepository extends RecordsRepository<Counter> {
   }
 
   Future<Counter?> getSelected() async {
-    final selected = await find(Finder(filter: Filter.equals('isSelected', true), limit: 1));
-    if (selected.isEmpty)
-      return null;
+    final selected =
+        await find(Finder(filter: Filter.equals('isSelected', true), limit: 1));
+    if (selected.isEmpty) return null;
     return selected[0];
   }
 
@@ -167,8 +186,7 @@ class CountersRepository extends RecordsRepository<Counter> {
     var counter = await getSelected();
     if (counter == null) {
       final all = await getAll();
-      if (all.length == 0)
-        return null;
+      if (all.length == 0) return null;
       counter = all[0];
       await setSelected(counter);
     }
@@ -177,8 +195,7 @@ class CountersRepository extends RecordsRepository<Counter> {
 
   Future setSelected(Counter counter) async {
     final selected = await getSelected();
-    if (selected != null)
-      await update(selected.copyWith(isSelected: false));
+    if (selected != null) await update(selected.copyWith(isSelected: false));
     await update(counter.copyWith(isSelected: true));
   }
 
@@ -197,10 +214,10 @@ class CountersRepository extends RecordsRepository<Counter> {
   }
 
   Future<Counter?> createSnapshot(Counter counter) async {
-    if (counter.resetType == ResetType.none)
-      return null;
+    if (counter.resetType == ResetType.none) return null;
 
-    await RepositoryProvider.of<SnapshotsRepository>(context).createSnapshot(counter);
+    await RepositoryProvider.of<SnapshotsRepository>(context)
+        .createSnapshot(counter);
     if (counter.resetOnSnapshot) {
       return await setCounterValue(counter, 0);
     } else {
@@ -213,9 +230,11 @@ class CountersRepository extends RecordsRepository<Counter> {
   @override
   Future<bool> delete(Counter instance) {
     try {
-      RepositoryProvider.of<SnapshotsRepository>(context).deleteSnapshotsOf(instance.requireId());
+      RepositoryProvider.of<SnapshotsRepository>(context)
+          .deleteSnapshotsOf(instance.requireId());
     } catch (e) {
-      log("Failed to delete snapshots of counter id=${instance.id}, \"${instance.label}\"", error: e);
+      log("Failed to delete snapshots of counter id=${instance.id}, \"${instance.label}\"",
+          error: e);
     }
     return super.delete(instance);
   }

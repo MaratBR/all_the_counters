@@ -6,21 +6,22 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class CurrentCounterBloc extends Bloc<CurrentCounterEvent, CurrentCounterState> {
+class CurrentCounterBloc
+    extends Bloc<CurrentCounterEvent, CurrentCounterState> {
   final BuildContext context;
 
   CurrentCounterBloc(this.context) : super(CurrentCounterState.initial()) {}
 
   @override
-  Stream<CurrentCounterState> mapEventToState(CurrentCounterEvent event) async* {
+  Stream<CurrentCounterState> mapEventToState(
+      CurrentCounterEvent event) async* {
     if (event is CurrentCounterNewValue) {
       yield CurrentCounterState(
-        value: event.newValue,
-        type: state.type,
-        label: state.label,
-        stateType: CurrentCounterStateType.counter,
-        counter: state.counter
-      );
+          value: event.newValue,
+          type: state.type,
+          label: state.label,
+          stateType: CurrentCounterStateType.counter,
+          counter: state.counter);
     } else if (event is CurrentCounterNewCounter) {
       final counter = event.counter;
       if (counter != null)
@@ -45,8 +46,7 @@ class CurrentCounterBloc extends Bloc<CurrentCounterEvent, CurrentCounterState> 
       final needsSnapshot = Snapshot.requiresSnapshot(counter, DateTime.now());
       if (needsSnapshot) {
         final newCounter = await repo.createSnapshot(counter);
-        if (newCounter != null)
-          add(CurrentCounterNewValue(newCounter.value));
+        if (newCounter != null) add(CurrentCounterNewValue(newCounter.value));
       }
     }
   }
@@ -56,11 +56,13 @@ class CurrentCounterBloc extends Bloc<CurrentCounterEvent, CurrentCounterState> 
       final repo = RepositoryProvider.of<CountersRepository>(context);
       final snapRepo = RepositoryProvider.of<SnapshotsRepository>(context);
       var counter = await repo.getSelectedOrSet();
-      if (counter != null && Snapshot.requiresSnapshot(counter, DateTime.now())) {
+      if (counter != null &&
+          Snapshot.requiresSnapshot(counter, DateTime.now())) {
         counter = await repo.createSnapshot(counter);
       }
-      final snapshotsCount = counter == null ? 0 :
-        await snapRepo.countSnapshotsOf(counter.requireId());
+      final snapshotsCount = counter == null
+          ? 0
+          : await snapRepo.countSnapshotsOf(counter.requireId());
       add(CurrentCounterNewCounter(counter, snapshotsCount: snapshotsCount));
     } catch (e) {
       add(CurrentCounterMessage(e.toString()));
@@ -76,5 +78,4 @@ class CurrentCounterBloc extends Bloc<CurrentCounterEvent, CurrentCounterState> 
       add(CurrentCounterMessage(e.toString()));
     }
   }
-
 }

@@ -58,7 +58,6 @@ class _MainPageState extends State<MainPage> with RouteAware {
   }
 
   Widget _ui(BuildContext context) {
-    final theme = Theme.of(context);
     return BlocBuilder<CurrentCounterBloc, CurrentCounterState>(
       bloc: _bloc,
       builder: (context, state) => Stack(
@@ -73,12 +72,8 @@ class _MainPageState extends State<MainPage> with RouteAware {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => CounterListScreen()
-                          )
-                      );
-                    }
-                )
-            ),
+                              builder: (context) => CounterListScreen()));
+                    })),
             alignment: Alignment.topRight,
           ),
 
@@ -89,8 +84,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: _buildMainArea(state),
                 ),
-              )
-          ),
+              )),
 
           if (state.counter != null)
             Align(
@@ -99,7 +93,9 @@ class _MainPageState extends State<MainPage> with RouteAware {
                 height: 80,
                 child: CounterButtonPalette(
                   gradation: _getGradationForCounter(state.counter!),
-                  onClick: (value) { _bloc.addToCounter(value); },
+                  onClick: (value) {
+                    _bloc.addToCounter(value);
+                  },
                   type: state.type,
                 ),
               ),
@@ -124,9 +120,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
             children: [
               Padding(
                   padding: EdgeInsets.only(bottom: 10),
-                  child: Text('No counters found')
-              ),
-
+                  child: Text('No counters found')),
               TextButton(
                 onPressed: () {
                   _bloc.createNewCounter();
@@ -142,50 +136,37 @@ class _MainPageState extends State<MainPage> with RouteAware {
 
       return [
         Text(counter.label ?? "Unnamed counter"),
-        Row(
-            children: [
-              IconButton(
-                  icon: Icon(Icons.remove),
-                  onPressed: () => { _bloc.addToCounter(-1) }
-              ),
-
-              Container(
-                child: CounterValueDisplay(
-                  value: state.value,
-                  type: state.type,
-                  showSign: false,
-                  fontSize: 38,
-                ),
-              ),
-
-
-              IconButton(
-                  icon: Icon(Icons.add),
-                  onPressed: () => { _bloc.addToCounter(1) }
-              ),
-            ],
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly
-        ),
+        Row(children: [
+          IconButton(
+              icon: Icon(Icons.remove),
+              onPressed: () => {_bloc.addToCounter(-1)}),
+          Container(
+            child: CounterValueDisplay(
+              value: state.value,
+              type: state.type,
+              showSign: false,
+              fontSize: 38,
+            ),
+          ),
+          IconButton(
+              icon: Icon(Icons.add), onPressed: () => {_bloc.addToCounter(1)}),
+        ], mainAxisAlignment: MainAxisAlignment.spaceEvenly),
         if (state.snapshotsCount > 0)
           Container(
             margin: EdgeInsets.only(top: 15),
-            child: Text(state.snapshotsCount.toString() + " " + (state.snapshotsCount == 1 ? "snapshot" : "snapshots")),
+            child: Text(state.snapshotsCount.toString() +
+                " " +
+                (state.snapshotsCount == 1 ? "snapshot" : "snapshots")),
           ),
-
       ];
     } else if (state.stateType == CurrentCounterStateType.loading) {
-      return [
-        CircularProgressIndicator()
-      ];
+      return [CircularProgressIndicator()];
     }
-    return [
-      Text(state.toString())
-    ];
+    return [Text(state.toString())];
   }
 
   List<double> _getGradationForCounter(Counter counter) {
-    if (counter.type == CounterType.time)
-      return [1, .25, .5, 2, 3, 4];
+    if (counter.type == CounterType.time) return [1, .25, .5, 2, 3, 4];
     return [1, 2, 3, 4, 5, 6];
   }
 }
